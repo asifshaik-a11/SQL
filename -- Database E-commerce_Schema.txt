@@ -1,0 +1,67 @@
+-- Database: E-commerce_Schema
+-- This script is compatible with SQLite and MySQL/PostgreSQL (with minor datatype adjustments).
+
+-- ----------------------------------------------------------------------
+-- 1. CUSTOMERS Table (Parent Table)
+-- Stores basic user information.
+-- ----------------------------------------------------------------------
+CREATE TABLE CUSTOMERS (
+    customer_id INT PRIMARY KEY,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    phone_number VARCHAR(15),
+    address VARCHAR(255)
+);
+
+-- ----------------------------------------------------------------------
+-- 2. PRODUCTS Table (Parent Table)
+-- Stores inventory and item details.
+-- ----------------------------------------------------------------------
+CREATE TABLE PRODUCTS (
+    product_id INT PRIMARY KEY,
+    product_name VARCHAR(100) NOT NULL,
+    description TEXT,
+    price DECIMAL(10, 2) NOT NULL,
+    stock_quantity INT NOT NULL,
+    CHECK (stock_quantity >= 0) -- Constraint to ensure stock is non-negative
+);
+
+-- ----------------------------------------------------------------------
+-- 3. ORDERS Table (Child of CUSTOMERS)
+-- Stores transaction information (One-to-Many: CUSTOMERS to ORDERS)
+-- ----------------------------------------------------------------------
+CREATE TABLE ORDERS (
+    order_id INT PRIMARY KEY,
+    customer_id INT NOT NULL,
+    order_date DATE NOT NULL,
+    total_amount DECIMAL(10, 2) NOT NULL,
+    order_status VARCHAR(50) NOT NULL,
+    
+    FOREIGN KEY (customer_id) 
+        REFERENCES CUSTOMERS(customer_id) 
+        ON DELETE CASCADE -- If a customer is deleted, delete their orders
+);
+
+-- ----------------------------------------------------------------------
+-- 4. ORDER_ITEMS Table (Junction Table / Child of ORDERS and PRODUCTS)
+-- Breaks the Many-to-Many relationship between PRODUCTS and ORDERS.
+-- Uses a Composite Primary Key.
+-- ----------------------------------------------------------------------
+CREATE TABLE ORDER_ITEMS (
+    order_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL,
+    unit_price DECIMAL(10, 2) NOT NULL,
+    
+    PRIMARY KEY (order_id, product_id), -- Composite PK: An order item is unique by both ID's
+    
+    FOREIGN KEY (order_id) 
+        REFERENCES ORDERS(order_id) 
+        ON DELETE CASCADE,
+        
+    FOREIGN KEY (product_id) 
+        REFERENCES PRODUCTS(product_id) 
+        ON DELETE RESTRICT -- Do not allow product deletion if it's in an order history
+);
+E-commerce Schema Tables with Sample Data
